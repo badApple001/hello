@@ -15,21 +15,21 @@ const PORT = 3000;
 
     app.get('/', async (req, res) => {
       try {
-        // 总是让 count 字段自增1，第一次自动从0开始
-        const result = await col.findOneAndUpdate(
+        // 1. 查询当前计数
+        let doc = await col.findOne({ _id: 'visit_count' });
+        let count = doc && typeof doc.count === 'number' ? doc.count : 0;
+
+        // 2. 自增
+        count++;
+
+        // 3. 存回去（覆盖写）
+        await col.updateOne(
           { _id: 'visit_count' },
-          { $inc: { count: 1 } },
-          {
-            upsert: true,
-            returnDocument: 'after'
-          }
+          { $set: { count } },
+          { upsert: true }
         );
-        // 如果是首次插入，Mongo会自动加上 count:1
-        // 但保险起见补一层容错
-        let count = 1;
-        if (result.value && typeof result.value.count === 'number') {
-          count = result.value.count;
-        }
+
+        // 4. 返回最新值
         res.json({ ok: true, count });
       } catch (e) {
         res.status(500).json({ ok: false, error: e.message });
