@@ -1,25 +1,146 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>点击加分小游戏</title>
-  <link rel="stylesheet" href="style.css">
+  <title>极简俄罗斯方块</title>
+  <style>
+    body { text-align:center; font-family:sans-serif; background:#fafafa }
+    #game { display:inline-block; background:#222; margin:18px auto; }
+    #score { color:#1565c0; font-size:20px; margin:12px; }
+    button { margin:2px; padding:6px 30px; font-size:16px; border-radius:4px; border:none; background:#1976d2;color:#fff; }
+    .controls { margin:10px; }
+  </style>
 </head>
 <body>
-  <h2>简单加分游戏</h2>
-  <div id="user-panel">
-    <input id="username" placeholder="用户名">
-    <input id="password" type="password" placeholder="密码">
-    <button id="register">注册</button>
-    <button id="login">登录</button>
-    <div id="msg"></div>
+  <h2>俄罗斯方块</h2>
+  <div id="score">分数: 0</div>
+  <canvas id="game" width="200" height="400" tabindex="0"></canvas>
+  <div class="controls">
+    <button onclick="move(-1)">←</button>
+    <button onclick="rotate()">⟳</button>
+    <button onclick="move(1)">→</button>
+    <button onclick="down()">↓</button>
+    <button onclick="resetGame()">重玩</button>
   </div>
-  <div id="game-panel" style="display:none;">
-    <div id="score">分数: 0</div>
-    <button id="add-btn">点击加分</button>
-    <button id="logout">退出</button>
-  </div>
-  <script src="game.js"></script>
+  <script>
+const COLS = 10, ROWS = 20, BLOCK = 20, COLORS = ['#E53935','#3949AB','#43A047','#FB8C00','#FDD835','#6D4C41','#00ACC1'];
+const SHAPES = [
+  [[1,1,1,1]],                 // I
+  [[1,1],[1,1]],               // O
+  [[0,1,0],[1,1,1]],           // T
+  [[1,1,0],[0,1,1]],           // Z
+  [[0,1,1],[1,1,0]],           // S
+  [[1,0,0],[1,1,1]],           // L
+  [[0,0,1],[1,1,1]]            // J
+];
+let canvas = game, ctx=canvas.getContext("2d");
+let board, piece, px, py, pshape, pcolor, score=0, dropped;
+
+function resetGame() {
+  board = Array.from({length:ROWS},()=>Array(COLS).fill(0));
+  score = 0;
+  dropped = false;
+  newPiece();
+  draw();
+  updateScore();
+}
+function newPiece() {
+  let r = Math.floor(Math.random()*SHAPES.length);
+  pshape = SHAPES[r];
+  pcolor = r+1;
+  px = Math.floor(COLS/2) - Math.ceil(pshape[0].length/2);
+  py = 0;
+  if(collision(px,py,pshape)) dropped=true;
+}
+function draw() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // draw board
+  for(let y=0;y<ROWS;y++)
+    for(let x=0;x<COLS;x++)
+      if(board[y][x]) {
+        ctx.fillStyle = COLORS[board[y][x]-1];
+        ctx.fillRect(x*BLOCK,y*BLOCK,BLOCK,BLOCK);
+        ctx.strokeStyle="#111";
+        ctx.strokeRect(x*BLOCK,y*BLOCK,BLOCK,BLOCK);
+      }
+  // draw piece
+  for(let y=0;y<pshape.length;y++)
+    for(let x=0;x<pshape[0].length;x++)
+      if(pshape[y][x])
+        ctx.fillStyle = COLORS[pcolor-1],
+        ctx.fillRect((px+x)*BLOCK,(py+y)*BLOCK,BLOCK,BLOCK),
+        ctx.strokeStyle="#fff",
+        ctx.strokeRect((px+x)*BLOCK,(py+y)*BLOCK,BLOCK,BLOCK);
+}
+function collision(nx,ny,ps=pshape){
+  for(let y=0;y<ps.length;y++)
+    for(let x=0;x<ps[0].length;x++)
+      if(ps[y][x]){
+        let bx=nx+x,by=ny+y;
+        if(bx<0||bx>=COLS||by>=ROWS) return true;
+        if(by>=0&&board[by][bx]) return true;
+      }
+  return false;
+}
+function merge(){
+  for(let y=0;y<pshape.length;y++)
+    for(let x=0;x<pshape[0].length;x++)
+      if(pshape[y][x]){
+        let bx=px+x, by=py+y;
+        if(by>=0) board[by][bx]=pcolor;
+      }
+}
+function rotate(){
+  let rot = pshape[0].map((_,i)=>pshape.map(r=>r[i])).map(r=>r.reverse());
+  if(!collision(px,py,rot)) pshape=rot, draw();
+}
+function move(dx){
+  if(!collision(px+dx,py)) px+=dx, draw();
+}
+function down(){
+  if(dropped) return;
+  if(!collision(px,py+1)) py++, draw();
+  else drop();
+}
+function drop(){
+  merge();
+  clearLines();
+  newPiece();
+  draw();
+}
+function clearLines(){
+  let lines=0;
+  for(let y=ROWS-1;y>=0;y--){
+    if(board[y].every(x=>x)){
+      board.splice(y,1);
+      board.unshift(Array(COLS).fill(0));
+      lines++;
+      y++;
+    }
+  }
+  score += lines*100;
+  updateScore();
+}
+function updateScore(){
+  score.innerText = "分数: "+score;
+}
+function gameTick(){
+  if(dropped) return;
+  if(!collision(px,py+1)) py++;
+  else drop();
+  draw();
+  setTimeout(gameTick,500);
+}
+canvas.onkeydown = function(e){
+  if(dropped) return;
+  if(e.key=="ArrowLeft") move(-1);
+  if(e.key=="ArrowRight") move(1);
+  if(e.key=="ArrowDown") down();
+  if(e.key=="ArrowUp") rotate();
+};
+canvas.onclick=function(){canvas.focus();}
+resetGame(); gameTick(); canvas.focus();
+</script>
 </body>
 </html>
 
