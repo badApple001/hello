@@ -15,16 +15,22 @@ const PORT = 3000;
 
     app.get('/', async (req, res) => {
       try {
+        // 总是让 count 字段自增1，第一次自动从0开始
         const result = await col.findOneAndUpdate(
           { _id: 'visit_count' },
           { $inc: { count: 1 } },
-          { upsert: true, returnDocument: 'after' }
+          {
+            upsert: true,
+            returnDocument: 'after'
+          }
         );
-        // 如果第一次插入，result.value 可能为 null
-        const visitCount = result.value && typeof result.value.count === 'number'
-          ? result.value.count
-          : 1;
-        res.json({ ok: true, count: visitCount });
+        // 如果是首次插入，Mongo会自动加上 count:1
+        // 但保险起见补一层容错
+        let count = 1;
+        if (result.value && typeof result.value.count === 'number') {
+          count = result.value.count;
+        }
+        res.json({ ok: true, count });
       } catch (e) {
         res.status(500).json({ ok: false, error: e.message });
       }
