@@ -11,11 +11,17 @@ const PORT = 3000;
     client = new MongoClient(MONGO_URL);
     await client.connect();
     const db = client.db('testdemo');
+    const col = db.collection('counter');
 
     app.get('/', async (req, res) => {
       try {
-        const count = await db.collection('messages').countDocuments();
-        res.json({ ok: true, count });
+        // 每次访问自增1，查出新值
+        const result = await col.findOneAndUpdate(
+          { _id: 'visit_count' },
+          { $inc: { count: 1 } },
+          { upsert: true, returnDocument: 'after' }
+        );
+        res.json({ ok: true, count: result.value.count });
       } catch (e) {
         res.status(500).json({ ok: false, error: e.message });
       }
