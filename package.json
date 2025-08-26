@@ -1,14 +1,13 @@
 {
-  "name": "testdemo",
+  "name": "ice-express-demo",
   "version": "1.0.0",
-  "description": "冰川Node+Mongo测试项目",
+  "description": "冰川 Express 最小测试项目",
   "main": "index.js",
+  "dependencies": {
+    "express": "^4.19.2"
+  },
   "scripts": {
     "start": "node index.js"
-  },
-  "dependencies": {
-    "express": "^4.19.2",
-    "mongodb": "^6.6.0"
   }
 }
 
