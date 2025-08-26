@@ -15,13 +15,16 @@ const PORT = 3000;
 
     app.get('/', async (req, res) => {
       try {
-        // 每次访问自增1，查出新值
         const result = await col.findOneAndUpdate(
           { _id: 'visit_count' },
           { $inc: { count: 1 } },
           { upsert: true, returnDocument: 'after' }
         );
-        res.json({ ok: true, count: result.value.count });
+        // 如果第一次插入，result.value 可能为 null
+        const visitCount = result.value && typeof result.value.count === 'number'
+          ? result.value.count
+          : 1;
+        res.json({ ok: true, count: visitCount });
       } catch (e) {
         res.status(500).json({ ok: false, error: e.message });
       }
