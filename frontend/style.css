@@ -1,0 +1,8 @@
+body { font-family:sans-serif; text-align:center; }
+#game { margin:30px auto; }
+button { padding:10px 30px; font-size:18px; margin:8px; }
+.mole { display:inline-block; width:60px; height:60px; background:#ccc; border-radius:50%; margin:12px; font-size:30px; cursor:pointer; line-height:60px; }
+#score { font-size:22px; margin:18px; color:#2196f3;}
+#panel { max-width:340px; margin:28px auto; padding:12px; border:1px solid #ddd; border-radius:10px; background:#fafafa;}
+#result { margin:10px;color:#f44336;}
+

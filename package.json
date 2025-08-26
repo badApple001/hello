@@ -1,13 +1,13 @@
 {
-  "name": "ice-express-demo",
+  "name": "simple-game-server",
   "version": "1.0.0",
-  "description": "冰川 Express 最小测试项目",
+  "description": "极简Node游戏API示例",
   "main": "index.js",
   "dependencies": {
-    "express": "^4.19.2"
+    "express": "^4.21.2",
+    "mongodb": "^6.18.0"
   },
   "scripts": {
     "start": "node index.js"
   }
 }
-
